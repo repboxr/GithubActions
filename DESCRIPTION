@@ -1,0 +1,11 @@
+Package: GithubActions
+Type: Package
+Title: Functions to facilitate use of Github Actions via R
+Version: 0.1.0
+Author: Sebastian Kranz
+Maintainer: Sebastian Kranz <sebastian.kranz@uni-ulm.de>
+Description: Work in progress. Not yet working well.
+License: GPL >= 2.0
+Depends: httr, curl, jsonlite, restorepoint
+Encoding: UTF-8
+LazyData: true
