@@ -29,6 +29,14 @@ gh_remove_history = function(repodir, branch = "main") {
   setwd(oldwd)
 }
 
+#' Remove a branch from local and github repository
+gh_remove_branch = function(repodir, branch) {
+  oldwd = getwd(); setwd(repodir)
+  system(paste0("git branch -d ", branch))
+  system(paste0("git push -d origin ", branch))
+  setwd(oldwd)
+}
+
 git_commit_all = function(repodir, msg="update") {
   oldwd = getwd(); setwd(repodir)
   cmd = "git add -A"

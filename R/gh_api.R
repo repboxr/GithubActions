@@ -40,7 +40,7 @@ gh_list_workflows = function(repo, pat = gh_pat()) {
 gh_run_workflow = function(repo,name=NULL,branch="main", inputs=NULL, pat = gh_pat()) {
   restore.point("gh_run_workflow")
 
-  workflows = gh_workflows(repo, pat)
+  workflows = gh_list_workflows(repo, pat)
 
   if (NROW(workflows)==0) {
     cat("\nNo workflow found.")

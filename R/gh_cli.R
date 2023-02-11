@@ -16,6 +16,18 @@ gh_login = function(email, username) {
 
 }
 
+# Create a new repo on github and locally
+gh_new_repo = function(reponame, parentdir, access=c("public","private")[2], pat=gh_pat()) {
+  restore.point("gh_new_repo")
+  oldwd = getwd(); setwd(parentdir)
+  # gh repo create [<name>] [flags]
+  cmd = paste0("gh repo create ", reponame, " --", access, " --clone")
+  cat("\n",cmd,"\n")
+  system(cmd)
+  cat(paste0("\nLocal repo in ", parentdir,"/", reponame),"\n")
+  setwd(oldwd)
+}
+
 gh_auth_status = function() {
   cmd = "gh auth status"
   system(cmd)
