@@ -47,6 +47,6 @@ gh_clone = function(repo, repodir) {
     cat("\nrepodir ", repodir, " already exists.\n")
     return(invisible())
   }
-  cmd = paste0("gh repo clone ", repo," ", localdir)
+  cmd = paste0("gh repo clone ", repo," ", repodir)
   system(cmd)
 }
