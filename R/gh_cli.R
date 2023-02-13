@@ -18,10 +18,10 @@ gh_login = function(email, username) {
 
 gh_run_log = function(repodir, runid) {
   oldwd = getwd(); setwd(repodir)
-  runid = "4154671741"
   cmd = paste0("gh run view ", runid," --log")
-  res = capture.output(system(cmd))
+  res = system(cmd, intern=TRUE)
   setwd(oldwd)
+  return(res)
 }
 
 # Create a new repo on github and locally
