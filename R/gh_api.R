@@ -76,10 +76,36 @@ gh_run_workflow = function(repo,name=NULL,branch="main", inputs=NULL, pat = gh_p
 
 }
 
+set_up_py_for_secrets = function() {
+  py_install("pynacl")
+}
+
+# Uses python
+gh_set_secret = function(repo, name, value, pat = Sys.getenv("GITHUB_PAT")) {
+  restore.point("gh_set_secret")
+  library(reticulate)
+  py_file = system.file("py/encrypt_gh_secret.py",package = "GithubActions")
+  #py_install("pynacl")
+  reticulate::source_python(py_file)
+
+  pub_key = gh_get(paste0("repos/",repo,"/actions/secrets/public-key"))
+
+  key_id = pub_key$key_id
+  key_b64 = pub_key$key
+
+  crypt_val_b64 = py_encrypt_gh_secret(key_b64, value)
+
+  #endpoint = repos/OWNER/REPO/actions/secrets/SECRET_NAME
+  endpoint = paste0("repos/", repo,"/actions/secrets/", name)
+
+  gh_put(endpoint, values = list(encrypted_value=cript_val_b64, key_id=key_id), pat=pat)
+}
+
+
 #' Set a repository secret
 #'
 #' Does not yet work.
-gh_set_secret = function(repo, name, value, pat = Sys.getenv("GITHUB_PAT")) {
+gh_set_secret_old = function(repo, name, value, pat = Sys.getenv("GITHUB_PAT")) {
   restore.point("gh_set_secret")
 
   pub_key = gh_get(paste0("repos/",repo,"/actions/secrets/public-key"))
