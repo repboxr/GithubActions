@@ -18,6 +18,18 @@ gh_pat = function() {
   Sys.getenv("GITHUB_PAT")
 }
 
+gh_list_run_jobs = function(repo, runid, pat=gh_pat()) {
+  #https://api.github.com/repos/OWNER/REPO/actions/runs/RUN_ID/jobs
+  gh_get(paste0("repos/", repo,"/actions/runs/",runid,"/jobs"),pat)$jobs
+}
+
+#' Return all workflow runs
+gh_list_runs = function(repo, pat=gh_pat()) {
+  #https://api.github.com/repos/OWNER/REPO/actions/runs
+  gh_get(paste0("repos/", repo,"/actions/runs"),pat)$workflow_runs
+
+}
+
 #' Return all workflows of the specified repo
 gh_list_workflows = function(repo, pat = gh_pat()) {
   #https://api.github.com/repos/OWNER/REPO/actions/workflows

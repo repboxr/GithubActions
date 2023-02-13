@@ -29,6 +29,12 @@ gh_remove_history = function(repodir, branch = "main") {
   setwd(oldwd)
 }
 
+gh_pull = function(repodir, branch = "main") {
+  oldwd = getwd(); setwd(repodir)
+  system(paste0("git pull origin ", branch))
+  setwd(oldwd)
+}
+
 #' Remove a branch from local and github repository
 gh_remove_branch = function(repodir, branch) {
   oldwd = getwd(); setwd(repodir)
