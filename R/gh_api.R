@@ -77,6 +77,7 @@ gh_run_workflow = function(repo,name=NULL,branch="main", inputs=NULL, pat = gh_p
 }
 
 set_up_py_for_secrets = function() {
+  library(reticulate)
   py_install("pynacl")
 }
 
@@ -198,29 +199,18 @@ gh_delete = function(endpoint, pat = Sys.getenv()) {
 }
 
 gh_get = function(endpoint, pat=gh_pat(), output = c("json","text","org", "httr")[1]) {
-  restore.point("api")
+  restore.point("gh_get")
 
-  if (output == "httr") {
-    headers = gh_headers(pat, add_content_type = TRUE)
-    res = httr::GET(url = gh_url(endpoint), httr::add_headers(.headers=headers))
+  headers = gh_headers(pat, add_content_type = TRUE)
+  res = httr::GET(url = gh_url(endpoint), httr::add_headers(.headers=headers))
+  if (output == "httr" | output == "org") {
     return(res)
   }
 
-  url=paste0("https://api.github.com/", endpoint)
-
-  hx <- curl::handle_setheaders(curl::new_handle(),
-    Authorization = paste0("Bearer ", pat),
-    Accept =  "application/vnd.github+json",
-    "X-GitHub-Api-Version: 2022-11-28"
-  )
-
-  req <- curl::curl_fetch_memory(url, handle = hx)
-  if (output == "org") return(req)
-
-  content = rawToChar(req$content)
+  content = rawToChar(res$content)
   if (output == "text") return(content)
-
   jsonlite::fromJSON(content)
+
 }
 
 
