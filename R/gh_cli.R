@@ -1,3 +1,4 @@
+#' Login to github with your email and username
 gh_login = function(email, username) {
   pat = gh_pat()
   if (is.null(pat)) {
@@ -43,6 +44,7 @@ gh_remove_secret = function(repodir, name) {
   return(res)
 }
 
+#' Get log of a particular workflow run
 gh_run_log = function(repodir, runid) {
   oldwd = getwd(); setwd(repodir)
   cmd = paste0("gh run view ", runid," --log")
@@ -51,7 +53,7 @@ gh_run_log = function(repodir, runid) {
   return(res)
 }
 
-# Create a new repo on github and locally
+#' Create a new repo on github and locally
 gh_new_repo = function(reponame, parentdir, access=c("public","private")[2], pat=gh_pat()) {
   restore.point("gh_new_repo")
   oldwd = getwd(); setwd(parentdir)
@@ -63,11 +65,13 @@ gh_new_repo = function(reponame, parentdir, access=c("public","private")[2], pat
   setwd(oldwd)
 }
 
+#' Show authentication status
 gh_auth_status = function() {
   cmd = "gh auth status"
   system(cmd)
 }
 
+#' Clone a repository on Github to a local directory
 gh_clone = function(repo, repodir) {
   #gh repo clone <repository> [<directory>] [-- <gitflags>...]
   if (dir.exists(repodir)) {
