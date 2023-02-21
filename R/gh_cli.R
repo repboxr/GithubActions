@@ -16,6 +16,33 @@ gh_login = function(email, username) {
 
 }
 
+
+#' Set a repository secret using github client
+#'
+#' @param repodir path to your local repository
+#' @param name name of the secret
+#' @param value of the secret
+gh_set_secret = function(repodir, name, value) {
+  restore.point("gh_set_secret")
+  oldwd = getwd(); setwd(repodir)
+  cmd = paste0("gh secret set ", name ,' --body "', value,'"')
+  res = system(cmd, intern=TRUE)
+  res = gsub(value, "***", res, fixed = TRUE)
+  cat("\n",res,"\n")
+  setwd(oldwd)
+  return(res)
+}
+
+#' Remove a secret from the repository
+#'
+gh_remove_secret = function(repodir, name) {
+  restore.point("gh_remove_secret")
+  oldwd = getwd(); setwd(repodir)
+  cmd = paste0("gh secret deleta ", name)
+  system(cmd)
+  return(res)
+}
+
 gh_run_log = function(repodir, runid) {
   oldwd = getwd(); setwd(repodir)
   cmd = paste0("gh run view ", runid," --log")
