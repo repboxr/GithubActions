@@ -1,3 +1,42 @@
+gh_remove_previous_runs = function(repodir, keep_newest=1) {
+  gh_remove_runs(repodir, keep_newest=keep_newest)
+}
+
+gh_remove_runs = function(repodir, keep_newest=0, runids=gh_cli_list_runids(repodir)) {
+  restore.point("gh_remove_runs")
+  if (keep_newest >0) {
+    if (NROW(runids)<=keep_newest) return()
+    runids = runids[-c(1:keep_newest)]
+  }
+  cat("\nRemove ", NROW(runids)," workflow runs from ", repo,"\n")
+  for (runid in runids) {
+    gh_remove_run(repodir, runid)
+  }
+}
+
+
+
+
+gh_remove_run = function(repodir, runid) {
+  oldwd = getwd(); setwd(repodir)
+  cmd = paste0("gh run delete ", runid)
+  res = system(cmd, intern=TRUE)
+  setwd(oldwd)
+
+}
+
+
+#' Return all workflow runs
+gh_cli_list_runids = function(repodir, pat=gh_pat()) {
+  oldwd = getwd(); setwd(repodir)
+  cmd = paste0("gh run list")
+  res =  system(cmd, intern=TRUE)
+  tab = read.table(textConnection(res),sep = "\t")
+  runids = tab[,7]
+  setwd(oldwd)
+  return(runids)
+}
+
 #' Login to github with your email and username
 gh_login = function(email, username) {
   pat = gh_pat()
