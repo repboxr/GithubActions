@@ -29,7 +29,7 @@ gh_remove_run = function(repodir, runid) {
 #' Return all workflow runs
 gh_cli_list_runids = function(repodir, pat=gh_pat()) {
   oldwd = getwd(); setwd(repodir)
-  cmd = paste0("gh run list")
+  cmd = paste0("gh run list  --limit 1000")
   res =  system(cmd, intern=TRUE)
   tab = read.table(textConnection(res),sep = "\t")
   runids = tab[,7]
