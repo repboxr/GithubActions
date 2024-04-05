@@ -45,12 +45,18 @@ gh_wait_until_new_run_starts = function(repo, old_runid, pause.sec = 1, timeout 
 
 #' Wait until a new Github action job is completed
 gh_wait_until_run_completed = function(repo, runid, pause.sec = 1, timeout = 60*60*10, pat=gh_pat()) {
+  restore.point("gh_waint_until_run_completed")
   start.time = Sys.time()
 
   seconds_passed(start.time)
 
   while(TRUE) {
-    run = gh_info_run(repo,runid, pat)
+    run = try(gh_info_run(repo,runid, pat),silent = TRUE)
+    if (is(run, "try-error")) {
+      cat(paste0(Sys.time()," problem while retrieving status of GHA run:\n", paste0(as.character(run), collapse="\n"),"\nWill try again..."))
+      Sys.sleep(pause.sec)
+      next
+    }
     if (is.null(run)) {
       # Run with given id does not exist
       return(NULL)
