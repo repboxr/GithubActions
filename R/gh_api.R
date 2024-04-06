@@ -20,12 +20,19 @@ gh_pat = function() {
 
 #' Wait until a new Github action job has started
 gh_wait_until_new_run_starts = function(repo, old_runid, pause.sec = 1, timeout = 60, pat=gh_pat()) {
+  restore.point("gh_wait_until_new_run_starts")
   start.time = Sys.time()
 
   seconds_passed(start.time)
 
   while(TRUE) {
-    runs = gh_list_runs(repo, pat)
+    runs = try(gh_list_runs(repo, pat), silent=TRUE)
+    if (is(runs, "try-error")) {
+      cat(paste0(Sys.time()," problem while getting list of runs:\n", paste0(as.character(run), collapse="\n"),"\nWill try again..."))
+      Sys.sleep(pause.sec)
+      next
+    }
+
     if (NROW(runs)>0) {
       if (is.null(old_runid)) {
         return(runs$id[[1]])
