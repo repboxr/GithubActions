@@ -8,7 +8,7 @@ gh_remove_runs = function(repodir, keep_newest=0, runids=gh_cli_list_runids(repo
     if (NROW(runids)<=keep_newest) return()
     runids = runids[-c(1:keep_newest)]
   }
-  cat("\nRemove ", NROW(runids)," workflow runs from ", repo,"\n")
+  cat("\nRemove ", NROW(runids)," workflow runs from ", repodir,"\n")
   for (runid in runids) {
     gh_remove_run(repodir, runid)
   }
