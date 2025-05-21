@@ -89,40 +89,67 @@ gh_remove_binary_file = function(repo_dir, tag, yes = FALSE, show = TRUE) {
   invisible(c(rel_res, tag_res))
 }
 
-# ------------------------------------------------------------------
-# Check if a release exists ----------------------------------------
-# ------------------------------------------------------------------
-
-#' Check whether a GitHub release with a given tag exists.
+# -------------------------------------------------------------------
+#' List all releases (tags) of a GitHub repository
 #'
-#' Internally calls `gh release view <tag>` and inspects the exit status.
-#' Returns `TRUE` when the release exists, `FALSE` otherwise.
+#' @param repo_dir    Path to local repo (optional if owner_repo given).
+#' @param owner_repo  "owner/repo" string (optional if repo_dir given).
+#' @param limit       Max # of releases to fetch (GitHub max 100).
+#' @param show        Logical, echo the gh CLI call.
 #'
-#' @param repo_dir Path to the local repository.
-#' @param tag      Tag / release name to check.
-#' @param show     Logical, print CLI output.
-#' @return         Logical scalar: `TRUE` if the release exists.
+#' @return Character vector of tag names (0-length if none).
 #' @examples
-#' gh_has_release(repo_dir = ".", tag = "jep_38_4_2")
+#' gh_list_releases(owner_repo = "skranz/jep_podcast")
+# -------------------------------------------------------------------
+gh_list_releases = function(repo_dir = NULL,
+                            owner_repo = NULL,
+                            limit      = 100,
+                            show       = FALSE) {
 
-gh_has_release = function(repo_dir, tag, show = FALSE) {
-  if (!nzchar(tag)) stop("Argument 'tag' must be a non-empty string.")
+  args = c("release", "list",
+           "--limit", limit,
+           "--json", "tagName",
+           "--jq", ".[].tagName")
+
+  if (!is.null(owner_repo)) {
+    args = c(args, "-R", owner_repo)
+  } else if (!is.null(repo_dir)) {
+    if (!file.exists(file.path(repo_dir, ".git")))
+        stop("repo_dir does not point to a git repository: ", repo_dir)
+  } else {
+    repo_dir = getwd()
+  }
 
   old_wd = getwd()
-  on.exit(setwd(old_wd), add = TRUE)
-  setwd(repo_dir)
+  if (is.null(owner_repo) && !is.null(repo_dir)) {
+    on.exit(setwd(old_wd), add = TRUE)
+    setwd(repo_dir)
+  }
 
-  # Use system2 to capture both stdout and stderr plus exit status ----------
-  out = tryCatch({
-    res = system2("gh", c("release", "view", tag), stdout = TRUE, stderr = TRUE)
-    if (show) cat(res, sep = "\n")
-    status = attr(res, "status")
-    is.null(status) # NULL -> exit status 0 -> release found
-  }, error = function(e) {
-    if (show) message(e$message)
-    FALSE
-  })
-  return(out)
+  if (show) cat("\nRunning:\n", "gh", paste(args, collapse = " "), "\n")
+  tags = suppressWarnings(system2("gh", args, stdout = TRUE, stderr = TRUE))
+  tags = tags[nzchar(tags)]     # drop empty lines
+
+  return(tags)
+}
+
+# -------------------------------------------------------------------
+#' TRUE/FALSE: does a release with this tag exist?
+#'
+#' Just a wrapper around gh_list_releases().
+# -------------------------------------------------------------------
+gh_has_release = function(tag,
+                          repo_dir   = NULL,
+                          owner_repo = NULL,
+                          limit      = 100,
+                          show       = FALSE) {
+
+  if (!nzchar(tag)) stop("Argument 'tag' must be a non-empty string.")
+  tags = gh_list_releases(repo_dir   = repo_dir,
+                          owner_repo = owner_repo,
+                          limit      = limit,
+                          show       = show)
+  tag %in% tags
 }
 
 # ------------------------------------------------------------------
