@@ -1,0 +1,109 @@
+#' Create a new Github release and upload an asset.
+#'
+#' This function uses the 'gh release create' command to create a new release
+#' and optionally upload a file as a release asset.
+#'
+#' @param repodir Path to your local repository.
+#' @param tag_name The Git tag for the release (e.g., "v1.0.0", "episode-001").
+#'                 If the tag does not exist, it will be created.
+#' @param title The title of the release (e.g., "Episode 1: Introduction").
+#' @param body_file Path to a file containing the release notes/description.
+#'                  If NULL, you can provide `body` directly.
+#' @param body A string containing the release notes/description.
+#'             Used if `body_file` is NULL.
+#' @param target_commitish The branch or commit SHA to create the release against.
+#'                         Defaults to `main`.
+#' @param discussion_category The name of the discussion category for the release.
+#'                            E.g., "Announcements".
+#' @param prerelease If TRUE, marks the release as a prerelease.
+#' @param draft If TRUE, marks the release as a draft.
+#' @param file Path to the file to upload as a release asset (e.g., your MP3).
+#'             Optional.
+#' @param overwrite If TRUE, overwrite existing assets with the same name.
+#' @param show_output If TRUE, print the output of the gh command.
+#' @return The system command output.
+gh_add_release = function(repodir, tag_name, title, body_file = NULL, body = NULL,
+                          target_commitish = "main", discussion_category = NULL,
+                          prerelease = FALSE, draft = FALSE, file = NULL,
+                          overwrite = FALSE, show_output = TRUE) {
+  restore.point("gh_add_release")
+  oldwd = getwd()
+  on.exit(setwd(oldwd)) # Ensure working directory is restored
+  setwd(repodir)
+
+  cmd <- paste0("gh release create ", shQuote(tag_name))
+
+  cmd <- paste0(cmd, " --title ", shQuote(title))
+
+  if (!is.null(body_file)) {
+    cmd <- paste0(cmd, " --notes-file ", shQuote(body_file))
+  } else if (!is.null(body)) {
+    cmd <- paste0(cmd, " --notes ", shQuote(body))
+  } else {
+    # If no body or body_file, gh will prompt, which we want to avoid in scripts
+    # A blank body is better than prompting
+    cmd <- paste0(cmd, " --notes ", shQuote(""))
+  }
+
+  if (target_commitish != "main") {
+    cmd <- paste0(cmd, " --target ", shQuote(target_commitish))
+  }
+  if (!is.null(discussion_category)) {
+    cmd <- paste0(cmd, " --discussion-category ", shQuote(discussion_category))
+  }
+  if (prerelease) {
+    cmd <- paste0(cmd, " --prerelease")
+  }
+  if (draft) {
+    cmd <- paste0(cmd, " --draft")
+  }
+  if (overwrite) {
+    cmd <- paste0(cmd, " --clobber")
+  }
+
+  if (!is.null(file)) {
+    if (!file.exists(file)) {
+      stop("File to upload as asset not found: ", file)
+    }
+    # Add the file path as the last argument for gh release create
+    cmd <- paste0(cmd, " ", shQuote(file))
+  }
+
+  if (show_output) {
+    cat("\nRunning command:\n", cmd, "\n")
+  }
+
+  res <- system(cmd, intern = TRUE)
+
+  if (show_output) {
+    cat(paste0(res, collapse = "\n"), "\n")
+  }
+  return(res)
+}
+
+
+#' Delete a Github release or tag
+#'
+#' This function uses the 'gh release delete' command to remove a release
+#' from a GitHub repository.
+#'
+#' @param repodir Path to your local repository.
+#' @param tag_name The Git tag of the release to delete (e.g., "v1.0.0", "episode-001").
+#' @param yes If TRUE, bypasses the confirmation prompt for deletion.
+#'            Use with caution.
+#' @param show_output If TRUE, print the output of the gh command.
+#' @return The system command output.
+gh_remove_release_or_tag = function(repodir, tag_name, yes = FALSE, show_output = TRUE) {
+  restore.point("gh_remove_release_or_tag")
+  oldwd = getwd(); on.exit(setwd(oldwd)); setwd(repodir)
+
+  del_release = paste("gh release delete", shQuote(tag_name), if (yes) "--yes")
+  rel_res = system(del_release, intern = TRUE, ignore.stderr = TRUE)
+  if (any(grepl("no release found", rel_res, ignore.case = TRUE))) {
+    if (show_output) message("No release – deleting tag instead.")
+    del_tag = paste("gh tag delete", shQuote(tag_name), if (yes) "--yes")
+    rel_res = c(rel_res, system(del_tag, intern = TRUE))
+  }
+  if (show_output) cat(rel_res, sep = "\n")
+  invisible(rel_res)
+}
