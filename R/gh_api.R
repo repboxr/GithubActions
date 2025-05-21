@@ -175,7 +175,26 @@ gh_download_artifact = function(repo, destfile, artifact_id = NULL, runid=NULL, 
 
   endpoint = paste0("repos/",repo,"/actions/artifacts/", artifact_id,"/zip")
 
-  if (use_curl) {
+  if (FALSE) {
+    # Set up the URL and the destination file
+    url <- paste0('https://api.github.com/', endpoint)
+
+    # Set up the authorization and headers
+    headers <- c(
+      'Accept: application/vnd.github+json',
+      paste0("Authorization: Bearer ", pat),
+      'X-GitHub-Api-Version: 2022-11-28'
+    )
+
+    # Create a new curl handle with the specified headers
+    h <- new_handle()
+    h = handle_setheaders(h, .list = headers)
+    handle_setopt(h, cookiefile = "")
+    handle_setopt(h, verbose = TRUE)
+    # Perform the HTTP GET request and write the output to the destination file
+    destfile = normalizePath(destfile, mustWork=FALSE)
+    curl_download(url, destfile, handle = h)
+  } else if (use_curl) {
     destfile = normalizePath(destfile, mustWork=FALSE)
     cmd = paste0('
 curl --output ', destfile,' -L \\
