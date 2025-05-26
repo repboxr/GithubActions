@@ -1,7 +1,8 @@
 #' Updates the Github repository to the new content of the local repo directory
-gh_update = function(repodir, msg="update", remote="origin",branch="main") {
+#'
+gh_update = function(repodir, msg="update", remote="origin",branch="main", force_with_lease=FALSE) {
   git_commit_all(repodir, msg)
-  git_push(repodir, remote, branch)
+  git_push(repodir, remote, branch, force_with_lease=force_with_lease)
 }
 
 #' Removes all old commits of a branch and only keeps current local files
@@ -53,9 +54,36 @@ git_commit_all = function(repodir, msg="update") {
   setwd(oldwd)
 }
 
-git_push = function(repodir, remote="origin", branch="main") {
+#' Push local changes to a remote Git branch
+#'
+#' Runs a `git push` (optionally with `--force-with-lease`) from a given
+#' repository directory, then restores the original working directory.
+#'
+#' @param repodir Character string. Path to the local Git repository.
+#' @param remote  Character string. Name of the remote to push to.
+#'                Default is `"origin"`.
+#'                **Note:** the current implementation always pushes to
+#'                `"origin"` internally; change `cmd` if you need another remote.
+#' @param branch  Character string. Name of the branch to push.
+#'                Default is `"main"`.
+#' @param force_with_lease Logical. Set TRUE if your local branch was reverted to an old commit, but you still want to force changes to the main branch. If `TRUE`, uses
+#'                `git push --force-with-lease`; otherwise a normal
+#'                `git push`. Default is `FALSE`.
+#'
+#' @details
+#' The function temporarily switches the working directory to `repodir`,
+#' assembles the appropriate `git push` command, executes it via
+#' `system()`, and then switches back to the original directory stored in
+#' `oldwd`.
+#' @export
+git_push = function(repodir, remote="origin", branch="main", force_with_lease=FALSE) {
   oldwd = getwd(); setwd(repodir)
-  cmd = paste0('git push origin ', branch)
+  if (force_with_lease) {
+    cmd = paste0('git push --force-with-lease origin ', branch)
+  } else {
+    cmd = paste0('git push origin ', branch)
+
+  }
   system(cmd)
   setwd(oldwd)
 }
